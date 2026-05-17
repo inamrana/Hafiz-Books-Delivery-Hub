@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 
+  BULLETPROOF INPUT CONTRAST FIX 
+  Forcing pure white background and pure black text for ALL input elements 
+  using multiple selectors to defeat any Tailwind or browser-native dark mode overrides.
+*/
+input, 
+select, 
+textarea,
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+select.w-full,
+textarea.w-full {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1.5px solid #cbd5e1 !important; /* solid light gray border */
+}
+
+/* Specific styling for placeholder text to ensure it's easily readable but distinct */
+input::placeholder, 
+textarea::placeholder {
+  color: #4b5563 !important; /* dark gray placeholder text */
+  opacity: 1 !important;
+}
+
+/* Focus styles */
+input:focus, 
+select:focus, 
+textarea:focus {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #2563eb !important; /* solid blue border on focus */
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
