@@ -8,6 +8,7 @@ export async function GET() {
     const categories = await getCategories();
     return NextResponse.json({ success: true, data: categories });
   } catch (error) {
+    console.error('API Error in GET /api/categories:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch categories' }, { status: 500 });
   }
 }
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
     const category = await createCategory(name);
     return NextResponse.json({ success: true, data: category }, { status: 201 });
   } catch (error) {
+    console.error('API Error in POST /api/categories:', error);
     return NextResponse.json({ success: false, error: 'Failed to create category' }, { status: 400 });
   }
 }
