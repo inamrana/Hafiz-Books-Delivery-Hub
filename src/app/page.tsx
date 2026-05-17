@@ -64,6 +64,21 @@ export default function Home() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
+  const updateCartQuantity = (id: string, delta: number) => {
+    setCart(prev => {
+      const updated = prev.map(item => {
+        if (item.product._id === id) {
+          const newQty = item.quantity + delta;
+          if (newQty <= 0) return null;
+          return { ...item, quantity: newQty };
+        }
+        return item;
+      }).filter(Boolean) as { product: Product, quantity: number }[];
+      
+      return updated;
+    });
+  };
+
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'All' || (p.category || 'Uncategorized') === activeCategory;
@@ -134,45 +149,80 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-          {filteredProducts.map(product => (
-            <div key={product._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-blue-100 transition-all duration-300 overflow-hidden group flex flex-col">
-              <div className="relative aspect-square overflow-hidden bg-gray-50 p-4">
-                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500 drop-shadow-sm" />
-                {!product.isAvailable && (
-                  <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center">
-                    <span className="text-red-600 font-bold px-3 py-1.5 border-2 border-red-600 rounded-full rotate-[-15deg] uppercase tracking-wider text-xs md:text-sm shadow-sm bg-white/50">Out of Stock</span>
-                  </div>
-                )}
-                {product.category && product.category !== 'Uncategorized' && (
-                  <span className="absolute top-3 left-3 bg-white/90 backdrop-blur text-gray-800 text-[10px] md:text-xs font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide">
-                    {product.category}
+          {filteredProducts.map(product => {
+            const cartItem = cart.find(item => item.product._id === product._id);
+            const quantityInCart = cartItem ? cartItem.quantity : 0;
+
+            return (
+              <div key={product._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-blue-100 transition-all duration-300 overflow-hidden group flex flex-col relative">
+                
+                {/* Floating Quantity Badge on Card */}
+                {quantityInCart > 0 && (
+                  <span className="absolute top-3 right-3 bg-blue-600 text-white text-[10px] md:text-xs font-extrabold px-2.5 py-1 rounded-full shadow-md z-10 animate-fade-in uppercase tracking-wider">
+                    {quantityInCart} added
                   </span>
                 )}
-              </div>
-              <div className="p-4 md:p-5 flex-grow flex flex-col justify-between border-t border-gray-50">
-                <div>
-                  <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-1 line-clamp-2 leading-tight">{product.name}</h3>
-                  <p className="text-blue-600 font-extrabold mb-3 md:mb-4 text-sm md:text-base">{product.price > 0 ? `Rs ${product.price}` : 'Price on request'}</p>
+
+                <div className="relative aspect-square overflow-hidden bg-gray-50 p-4">
+                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-sm" />
+                  {!product.isAvailable && (
+                    <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-10">
+                      <span className="text-red-600 font-bold px-3 py-1.5 border-2 border-red-600 rounded-full rotate-[-15deg] uppercase tracking-wider text-xs md:text-sm shadow-sm bg-white/50">Out of Stock</span>
+                    </div>
+                  )}
+                  {product.category && product.category !== 'Uncategorized' && (
+                    <span className="absolute top-3 left-3 bg-white/90 backdrop-blur text-gray-800 text-[10px] md:text-xs font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide">
+                      {product.category}
+                    </span>
+                  )}
                 </div>
-                <button
-                  onClick={() => addToCart(product)}
-                  disabled={!product.isAvailable}
-                  className={`w-full py-2.5 rounded-xl text-sm md:text-base font-bold transition-all flex justify-center items-center gap-2 ${
-                    product.isAvailable 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-md shadow-blue-600/20' 
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {product.isAvailable ? (
-                    <>
-                      <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                      Add
-                    </>
-                  ) : 'Out of Stock'}
-                </button>
+                <div className="p-4 md:p-5 flex-grow flex flex-col justify-between border-t border-gray-50">
+                  <div>
+                    <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-1 line-clamp-2 leading-tight">{product.name}</h3>
+                    <p className="text-blue-600 font-extrabold mb-3 md:mb-4 text-sm md:text-base">{product.price > 0 ? `Rs ${product.price}` : 'Price on request'}</p>
+                  </div>
+
+                  {/* Dynamic Interactive Button / Selector */}
+                  {quantityInCart > 0 ? (
+                    <div className="flex items-center justify-between border-2 border-blue-600 rounded-xl bg-blue-50/50 overflow-hidden w-full h-[40px] md:h-[44px]">
+                      <button 
+                        onClick={() => updateCartQuantity(product._id, -1)}
+                        className="px-3.5 h-full text-blue-600 hover:bg-blue-100 active:scale-95 transition font-extrabold text-base md:text-lg outline-none"
+                      >
+                        -
+                      </button>
+                      <span className="font-extrabold text-blue-700 text-xs md:text-sm select-none">
+                        {quantityInCart} in Cart
+                      </span>
+                      <button 
+                        onClick={() => updateCartQuantity(product._id, 1)}
+                        className="px-3.5 h-full text-blue-600 hover:bg-blue-100 active:scale-95 transition font-extrabold text-base md:text-lg outline-none"
+                      >
+                        +
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => addToCart(product)}
+                      disabled={!product.isAvailable}
+                      className={`w-full h-[40px] md:h-[44px] rounded-xl text-sm md:text-base font-bold transition-all flex justify-center items-center gap-2 ${
+                        product.isAvailable 
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-md shadow-blue-600/20' 
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {product.isAvailable ? (
+                        <>
+                          <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                          Add to Cart
+                        </>
+                      ) : 'Out of Stock'}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {filteredProducts.length === 0 && (
             <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
