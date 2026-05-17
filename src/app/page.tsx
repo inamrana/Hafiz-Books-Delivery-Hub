@@ -87,8 +87,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans relative">
+      {/* Announcement Bar */}
+      <div className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white text-center py-2.5 px-4 text-xs md:text-sm font-semibold tracking-wide flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-2 shadow-sm">
+        <span>🚀 Products delivered under 24 hours. Contact if you need early delivery!</span>
+        <span className="hidden sm:inline-block text-white/40">|</span>
+        <span>🚚 Delivery fee applied</span>
+        <span className="hidden sm:inline-block text-white/40">|</span>
+        <span>💳 Min. Order: Rs. 500</span>
+      </div>
+
       {/* Toast Notification */}
-      <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ${showToast ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
+      <div className={`fixed top-28 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ${showToast ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
         <div className="bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 font-medium">
           <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
           {toastMessage}
