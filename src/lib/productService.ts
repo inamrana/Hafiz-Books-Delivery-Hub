@@ -176,3 +176,41 @@ export async function createCategory(name: string) {
   }
   return trimmedName;
 }
+
+export async function deleteCategory(name: string) {
+  const trimmedName = name.trim();
+  if (!trimmedName) throw new Error('Category name cannot be empty');
+  if (trimmedName === 'Uncategorized') throw new Error('Cannot delete default Uncategorized category');
+
+  try {
+    if (process.env.MONGODB_URI && !process.env.MONGODB_URI.includes('<username>')) {
+      await dbConnect();
+      // Delete from Category collection
+      await Category.deleteOne({ name: trimmedName });
+      // Reassign products to Uncategorized
+      await Product.updateMany({ category: trimmedName }, { category: 'Uncategorized' });
+      return;
+    }
+  } catch (error) {
+    console.warn('MongoDB category delete failed, using fallback:', error);
+  }
+
+  await ensureLocalDb();
+  
+  // Reassign local products
+  const productsFileData = await fs.readFile(LOCAL_PRODUCTS_PATH, 'utf-8');
+  const products = JSON.parse(productsFileData);
+  const updatedProducts = products.map((p: any) => {
+    if (p.category === trimmedName) {
+      return { ...p, category: 'Uncategorized' };
+    }
+    return p;
+  });
+  await fs.writeFile(LOCAL_PRODUCTS_PATH, JSON.stringify(updatedProducts, null, 2));
+
+  // Delete local category
+  const categoriesFileData = await fs.readFile(LOCAL_CATEGORIES_PATH, 'utf-8');
+  const categories: string[] = JSON.parse(categoriesFileData);
+  const filteredCategories = categories.filter((c) => c !== trimmedName);
+  await fs.writeFile(LOCAL_CATEGORIES_PATH, JSON.stringify(filteredCategories, null, 2));
+}

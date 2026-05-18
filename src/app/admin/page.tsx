@@ -209,6 +209,32 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteCategory = async () => {
+    if (category === 'Uncategorized') return;
+    
+    const confirmDelete = confirm(`Are you sure you want to delete the category "${category}"? \nAll products in this category will be moved to "Uncategorized".`);
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: category }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Category "${category}" deleted successfully!`);
+        setCategory('Uncategorized');
+        fetchCategories();
+        fetchProducts(); // Refresh products to reflect changed categories
+      } else {
+        alert(data.error || 'Failed to delete category');
+      }
+    } catch {
+      alert('Error deleting category');
+    }
+  };
+
   const toggleAvailability = async (id: string, currentStatus: boolean) => {
     await fetch(`/api/products/${id}`, {
       method: 'PUT',
@@ -326,6 +352,16 @@ export default function AdminPage() {
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
+                    {category !== 'Uncategorized' && (
+                      <button 
+                        type="button" 
+                        onClick={handleDeleteCategory} 
+                        className="mt-1 text-red-500 hover:text-red-700 text-xs font-semibold flex items-center gap-1 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Remove category "{category}"
+                      </button>
+                    )}
                   </div>
                   
                   {/* Inline Category Adder */}

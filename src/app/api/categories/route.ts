@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCategories, createCategory } from '@/lib/productService';
+import { getCategories, createCategory, deleteCategory } from '@/lib/productService';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,5 +21,16 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('API Error in POST /api/categories:', error);
     return NextResponse.json({ success: false, error: 'Failed to create category' }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { name } = await request.json();
+    await deleteCategory(name);
+    return NextResponse.json({ success: true, message: 'Category deleted successfully' });
+  } catch (error) {
+    console.error('API Error in DELETE /api/categories:', error);
+    return NextResponse.json({ success: false, error: 'Failed to delete category' }, { status: 400 });
   }
 }
