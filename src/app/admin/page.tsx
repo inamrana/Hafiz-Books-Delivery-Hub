@@ -100,6 +100,44 @@ export default function AdminPage() {
     }
   };
 
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 600;
+          const MAX_HEIGHT = 600;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round((width * MAX_HEIGHT) / height);
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
@@ -114,18 +152,7 @@ export default function AdminPage() {
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const uploadData = await uploadRes.json();
-
-      if (!uploadRes.ok) {
-        throw new Error(uploadData.error || 'Upload failed');
-      }
+      const base64Image = await compressImage(file);
 
       const productRes = await fetch('/api/products', {
         method: 'POST',
@@ -134,7 +161,7 @@ export default function AdminPage() {
           name,
           price: price === '' ? 0 : Number(price),
           category,
-          imageUrl: uploadData.secure_url,
+          imageUrl: base64Image,
         }),
       });
 
@@ -147,10 +174,12 @@ export default function AdminPage() {
         if (fileInputRef.current) fileInputRef.current.value = '';
         fetchProducts();
         alert('Product added successfully!');
+      } else {
+        alert('Failed to save product in database');
       }
     } catch (error) {
       console.error(error);
-      alert('Error adding product');
+      alert('Error processing or uploading image');
     } finally {
       setLoading(false);
     }
